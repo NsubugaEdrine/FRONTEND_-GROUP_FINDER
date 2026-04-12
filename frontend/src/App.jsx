@@ -41,7 +41,7 @@ const Navbar = () => {
 
                 {user ? (
                     <>
-                        <Link to="/" className="btn btn-secondary" style={{ border: 'none' }}>
+                        <Link to="/dashboard" className="btn btn-secondary" style={{ border: 'none' }}>
                             <LayoutDashboard size={18} /> Dashboard
                         </Link>
 
@@ -126,7 +126,7 @@ function App() {
 
                     {/* Protected Routes */}
                     <Route
-                        path="/"
+                        path="/dashboard"
                         element={
                             <ProtectedRoute>
                                 <Dashboard />
