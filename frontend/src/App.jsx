@@ -1,171 +1,40 @@
-import React, { useContext } from 'react';
-import {
-    BrowserRouter as Router,
-    Routes,
-    Route,
-    Navigate,
-    Link
-} from 'react-router-dom';
-
-import { AuthContext } from './context/AuthContext';
-import { Toaster } from 'react-hot-toast';
-
-import {
-    LayoutDashboard,
-    Users,
-    User,
-    LogOut,
-    LogIn,
-    UserPlus
-} from 'lucide-react';
-
-// Pages
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import GroupList from './pages/GroupList';
+import GroupDetail from './pages/GroupDetail';
 import CreateGroup from './pages/CreateGroup';
-import GroupDetails from './pages/GroupDetails';
+import BrowseGroups from './pages/BrowseGroups';
+import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
+import ChatRoom from './pages/ChatRoom';
+import AppLayout from './components/AppLayout';
+import './index.css';
 
-/* ================= NAVBAR ================= */
-const Navbar = () => {
-    const { user, logout } = useContext(AuthContext);
-
-    return (
-        <nav className="navbar">
-            <Link to="/" className="nav-brand">
-                StudyGroup Finder
-            </Link>
-
-            <div className="nav-links">
-
-                {user ? (
-                    <>
-                        <Link to="/dashboard" className="btn btn-secondary" style={{ border: 'none' }}>
-                            <LayoutDashboard size={18} /> Dashboard
-                        </Link>
-
-                        <Link to="/groups" className="btn btn-secondary" style={{ border: 'none' }}>
-                            <Users size={18} /> Discover
-                        </Link>
-
-                        <span
-                            className="text-muted"
-                            style={{
-                                marginLeft: '1rem',
-                                borderLeft: '1px solid var(--border)',
-                                paddingLeft: '1rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}
-                        >
-                            <User size={16} />
-                            Welcome, {user?.name || 'User'}
-                        </span>
-
-                        <button
-                            className="btn btn-secondary"
-                            onClick={logout}
-                            style={{ color: 'var(--danger)' }}
-                        >
-                            <LogOut size={18} /> Logout
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <Link to="/login" className="btn btn-secondary">
-                            <LogIn size={18} /> Login
-                        </Link>
-
-                        <Link to="/register" className="btn btn-primary">
-                            <UserPlus size={18} /> Sign Up
-                        </Link>
-                    </>
-                )}
-
-            </div>
-        </nav>
-    );
-};
-
-/* ================= PROTECTED ROUTE ================= */
-const ProtectedRoute = ({ children }) => {
-    const { user, loading } = useContext(AuthContext);
-
-    if (loading) {
-        return (
-            <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-                Loading...
-            </div>
-        );
-    }
-
-    if (!user) {
-        return <Navigate to="/login" replace />;
-    }
-
-    return children;
-};
-
-/* ================= APP ================= */
 function App() {
-    return (
-        <Router>
-            <div className="app-container">
-
-                <Navbar />
-
-                <Toaster position="top-right" />
-
-                <Routes>
-
-                    {/* Public Routes */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-
-                    {/* Protected Routes */}
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/groups"
-                        element={
-                            <ProtectedRoute>
-                                <GroupList />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/groups/create"
-                        element={
-                            <ProtectedRoute>
-                                <CreateGroup />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/groups/:id"
-                        element={
-                            <ProtectedRoute>
-                                <GroupDetails />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                </Routes>
-
-            </div>
-        </Router>
-    );
+  return (
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/browse" element={<BrowseGroups />} />
+            <Route path="/group/:id" element={<GroupDetail />} />
+            <Route path="/create-group" element={<CreateGroup />} />
+            <Route path="/chatroom" element={<ChatRoom />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+        </Routes>
+      </div>
+    </Router>
+  );
 }
 
 export default App;
