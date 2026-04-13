@@ -1,231 +1,116 @@
-import React, { useState, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { UserPlus, User, Mail, Lock, BookOpen, GraduationCap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Lock, Mail } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
-    const { register } = useContext(AuthContext);
-    const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    program_of_study: '',
+    year_of_study: '',
+    role: 'STUDENT',
+    admin_signup_code: ''
+  });
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { register, user } = useAuth();
+  const canCreateAdmin = user?.role === 'ADMIN';
 
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        program_of_study: '',
-        year_of_study: ''
-    });
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        ...formData,
+        role: formData.role === 'ADMIN' ? 'ADMIN' : 'STUDENT',
+        admin_signup_code: formData.role === 'ADMIN' ? formData.admin_signup_code : ''
+      };
+      await register(payload);
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to register');
+    }
+  };
 
-    const handleChange = (e) =>
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const toastId = toast.loading('Creating account...');
-        setLoading(true);
-
-        try {
-            await register(formData);
-            toast.success('Account created successfully!', { id: toastId });
-            navigate('/');
-        } catch (err) {
-            const msg = err.response?.data?.message || 'Failed to register';
-            toast.error(msg, { id: toastId });
-            setError(msg);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div
-            className="main-content"
-            style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '80vh',
-                padding: '2rem 1rem'
-            }}
-        >
-            {/* PROFESSIONAL GLASS CARD */}
-            <div
-                className="glass-card"
-                style={{
-                    width: '100%',
-                    maxWidth: '520px',
-                    padding: '2rem',
-                    borderRadius: '18px',
-                    backdropFilter: 'blur(16px)',
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.12)'
-                }}
-            >
-                <h2
-                    style={{
-                        textAlign: 'center',
-                        marginBottom: '1.8rem',
-                        color: 'var(--primary)',
-                        fontWeight: 700,
-                        letterSpacing: '0.5px'
-                    }}
-                >
-                    Create an Account
-                </h2>
-
-                {error && (
-                    <div
-                        style={{
-                            color: 'var(--danger)',
-                            marginBottom: '1rem',
-                            textAlign: 'center',
-                            fontSize: '0.9rem'
-                        }}
-                    >
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    
-                    {/* FULL NAME */}
-                    <div className="form-group">
-                        <label className="form-label">Full Name</label>
-                        <div style={{ position: 'relative' }}>
-                            <User size={18} style={iconStyle} />
-                            <input
-                                type="text"
-                                name="name"
-                                className="form-input"
-                                style={inputStyle}
-                                required
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </div>
-
-                    {/* EMAIL */}
-                    <div className="form-group">
-                        <label className="form-label">Email</label>
-                        <div style={{ position: 'relative' }}>
-                            <Mail size={18} style={iconStyle} />
-                            <input
-                                type="email"
-                                name="email"
-                                className="form-input"
-                                style={inputStyle}
-                                required
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </div>
-
-                    {/* PASSWORD */}
-                    <div className="form-group">
-                        <label className="form-label">Password</label>
-                        <div style={{ position: 'relative' }}>
-                            <Lock size={18} style={iconStyle} />
-                            <input
-                                type="password"
-                                name="password"
-                                className="form-input"
-                                style={inputStyle}
-                                required
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </div>
-
-                    {/* PROGRAM + YEAR */}
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        
-                        <div style={{ flex: 1 }}>
-                            <label className="form-label">Program</label>
-                            <div style={{ position: 'relative' }}>
-                                <BookOpen size={18} style={iconStyle} />
-                                <input
-                                    type="text"
-                                    name="program_of_study"
-                                    placeholder="e.g. BSCS"
-                                    className="form-input"
-                                    style={inputStyle}
-                                    required
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-
-                        <div style={{ flex: 1 }}>
-                            <label className="form-label">Year</label>
-                            <div style={{ position: 'relative' }}>
-                                <GraduationCap size={18} style={iconStyle} />
-                                <input
-                                    type="number"
-                                    name="year_of_study"
-                                    placeholder="e.g. 2"
-                                    min="1"
-                                    max="6"
-                                    className="form-input"
-                                    style={inputStyle}
-                                    required
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* BUTTON */}
-                    <button
-                        type="submit"
-                        className="btn btn-primary"
-                        style={{
-                            width: '100%',
-                            marginTop: '1rem',
-                            padding: '0.9rem',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontWeight: 600
-                        }}
-                        disabled={loading}
-                    >
-                        <UserPlus size={20} />
-                        {loading ? 'Signing up...' : 'Sign Up'}
-                    </button>
-
-                    <p
-                        style={{
-                            textAlign: 'center',
-                            marginTop: '0.8rem'
-                        }}
-                        className="text-muted"
-                    >
-                        Already have an account? <Link to="/login">Login</Link>
-                    </p>
-                </form>
+  return (
+    <div className="container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="card" style={{ width: '100%', maxWidth: '450px' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--primary-color)' }}>Create an Account</h2>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Full Name</label>
+            <div style={{ position: 'relative' }}>
+              <User size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input type="text" name="name" className="input-field" style={{ paddingLeft: '2.5rem' }} placeholder="John Doe" value={formData.name} onChange={handleChange} required />
             </div>
-        </div>
-    );
-};
-
-/* ===== CLEAN STYLE CONSTANTS ===== */
-const inputStyle = {
-    paddingLeft: '40px',
-    height: '42px',
-    borderRadius: '10px'
-};
-
-const iconStyle = {
-    position: 'absolute',
-    left: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: 'var(--text-muted)'
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Email Address</label>
+            <div style={{ position: 'relative' }}>
+              <Mail size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input type="email" name="email" className="input-field" style={{ paddingLeft: '2.5rem' }} placeholder="john@example.com" value={formData.email} onChange={handleChange} required />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Program</label>
+              <input type="text" name="program_of_study" className="input-field" placeholder="e.g. BSCS" value={formData.program_of_study} onChange={handleChange} required />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Year of Study</label>
+              <input type="number" name="year_of_study" className="input-field" min="1" max="5" placeholder="1" value={formData.year_of_study} onChange={handleChange} required />
+            </div>
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Account Type</label>
+            <select
+              name="role"
+              className="input-field"
+              value={formData.role}
+              onChange={handleChange}
+              required
+            >
+              <option value="STUDENT">Student</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+            <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Admin signup requires an admin signup code or existing admin access.
+            </p>
+          </div>
+          {formData.role === 'ADMIN' && !canCreateAdmin ? (
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                Admin Signup Code
+              </label>
+              <input
+                type="password"
+                name="admin_signup_code"
+                className="input-field"
+                placeholder="Enter admin signup code"
+                value={formData.admin_signup_code}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          ) : null}
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>Password</label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input type="password" name="password" className="input-field" style={{ paddingLeft: '2.5rem' }} placeholder="••••••••" value={formData.password} onChange={handleChange} required />
+            </div>
+          </div>
+          <button type="submit" className="btn-primary" style={{ marginTop: '0.5rem', padding: '0.75rem' }}>Sign Up</button>
+        </form>
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+          Already have an account? <Link to="/login" style={{ color: 'var(--primary-color)', fontWeight: '500' }}>Log In</Link>
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default Register;

@@ -1,80 +1,60 @@
-import React, { createContext, useState, useEffect } from 'react';
-import api from '../api/axios';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import api from '../services/api';
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const token = localStorage.getItem('token');
+  // Initialize from LocalStorage
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
 
-                // If no token, stop immediately
-                if (!token) {
-                    setUser(null);
-                    setLoading(false);
-                    return;
-                }
+      if (storedUser && token) {
+        setUser(JSON.parse(storedUser));
+        try {
+          const response = await api.get('/auth/me');
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          setUser(response.data.user);
+        } catch (error) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      }
 
-                // Attach token explicitly (fixes blank page issue)
-                const response = await api.get('/auth/me', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-
-                setUser(response.data);
-            } catch (error) {
-                console.error('Failed to authenticate user', error);
-
-                // Clear invalid token
-                localStorage.removeItem('token');
-                setUser(null);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchUser();
-    }, []);
-
-    const login = async (email, password) => {
-        const response = await api.post('/auth/login', { email, password });
-
-        localStorage.setItem('token', response.data.token);
-        setUser(response.data.user);
-
-        return response.data;
+      setLoading(false);
     };
 
-    const register = async (userData) => {
-        const response = await api.post('/auth/register', userData);
+    initializeAuth();
+  }, []);
 
-        localStorage.setItem('token', response.data.token);
-        setUser(response.data.user);
+  const login = async (email, password) => {
+    const response = await api.post('/auth/login', { email, password });
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    setUser(response.data.user);
+    return response.data;
+  };
 
-        return response.data;
-    };
+  const register = async (userData) => {
+    return await api.post('/auth/register', userData);
+  };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
-    };
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
 
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                loading,
-                login,
-                register,
-                logout
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 };
+
+export const useAuth = () => useContext(AuthContext);
